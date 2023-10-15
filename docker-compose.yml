@@ -1,0 +1,46 @@
+services:
+
+  routingphp:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - /var/www/html/vendor/
+    ports:
+      - 80:80   
+
+  database:
+    image: mariadb:11.1.2
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: routingphp
+      MARIADB_DATABASE: routingphp
+      MARIADB_USER: routingphp
+      MARIADB_PASSWORD: routingphp
+    ports:
+      - 3306:3306
+
+  database_seeder:
+    image: mariadb:11.1.2
+    volumes:
+      - ./data/schema.sql:/data/schema.sql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "true"
+    entrypoint: [ "bash", "-c", "sleep 10 && mariadb --user=routingphp --password=routingphp --host=database --port=3306 routingphp < /data/schema.sql && exit"] 
+    depends_on:
+      - database
+
+  phpmyadmin:
+      image: phpmyadmin:5.2.1
+      restart: unless-stopped
+      ports:
+          - 8080:80
+      environment:
+          # we specify that we connect to an arbitrary server with the flag below
+          # "arbitrary" means you're able to specify which database server to use on login page of phpmyadmin      
+          - PMA_ARBITRARY=1
+      depends_on:
+        - database_seeder
