@@ -13,12 +13,12 @@ RUN docker-php-ext-install pdo_mysql mysqli
 # get latest Composer
 COPY --from=composer:2.6.5 /usr/bin/composer /usr/bin/composer
 
-# create system user ("bloc3" with uid 1000) 
-RUN useradd -G www-data,root -u 1000 -d /home/bloc3 bloc3
-RUN mkdir -p /home/bloc3/ && chown -R bloc3:bloc3 /home/bloc3
+# create system user ("usr" with uid 1000) 
+RUN useradd -G www-data,root -u 1000 -d /home/usr usr
+RUN mkdir -p /home/usr/ && chown -R usr:usr /home/usr
 
 # copy existing application directory permissions
-COPY --chown=bloc3:bloc3 . /var/www/html
+COPY --chown=usr:usr . /var/www/html
 
 # copy Apache virtual host
 COPY ./000-default.conf /etc/apache2/sites-available/000-default.conf
@@ -30,7 +30,7 @@ RUN a2enmod rewrite
 COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
 
 # changing user 
-USER bloc3
+USER usr
 
 # going to app' directory inside container
 WORKDIR /var/www/html
